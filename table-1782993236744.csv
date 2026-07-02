@@ -1,0 +1,9 @@
+﻿Category,Files
+**Config**,"`.gitignore`, `LICENSE`, `pyproject.toml`, `setup.py`, `requirements.txt`, `requirements-dev.txt`, `.pre-commit-config.yaml`, `Makefile`"
+**Core Source**,"`__init__.py`, `missing_value_handler.py`, `outlier_detector.py`, `type_corrector.py`, `duplicate_handler.py`, `text_cleaner.py`, `pipeline.py`, `report_generator.py`"
+**Utils**,"`logger.py`, `validators.py`"
+**Tests**,"`test_missing_value_handler.py`, `test_outlier_detector.py`, `test_pipeline.py`"
+**Examples**,"`basic_cleaning.py`, `advanced_pipeline.py`"
+**CI/CD**,`.github/workflows/ci.yml`
+**Data**,`.gitkeep` files for raw/processed folders
+**Docs**,`README.md`

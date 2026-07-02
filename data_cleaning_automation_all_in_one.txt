@@ -1,0 +1,2160 @@
+================================================================================
+DATA CLEANING AUTOMATION - COMPLETE PROJECT
+================================================================================
+
+INSTRUCTIONS:
+1. Create a new directory for your project
+2. For each file below, create the file at the specified path
+3. Copy everything between the === FILE START and === FILE END markers
+4. Run: pip install -e .
+5. Run: pytest tests/
+
+================================================================================
+
+================================================================================
+FILE: .github/workflows/ci.yml
+================================================================================
+
+=== FILE START ===
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: Lint with flake8
+      run: |
+        flake8 src tests --max-line-length=100
+
+    - name: Type check with mypy
+      run: |
+        mypy src
+
+    - name: Test with pytest
+      run: |
+        pytest tests/ -v --cov=src/data_cleaning_automation --cov-report=xml
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+
+=== FILE END ===
+
+
+================================================================================
+FILE: .gitignore
+================================================================================
+
+=== FILE START ===
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Data files (keep structure, ignore contents)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+=== FILE END ===
+
+
+================================================================================
+FILE: .pre-commit-config.yaml
+================================================================================
+
+=== FILE START ===
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-json
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.3.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+
+=== FILE END ===
+
+
+================================================================================
+FILE: LICENSE
+================================================================================
+
+=== FILE START ===
+MIT License
+
+Copyright (c) 2026 Your Name
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+=== FILE END ===
+
+
+================================================================================
+FILE: Makefile
+================================================================================
+
+=== FILE START ===
+.PHONY: install install-dev test lint format clean docs
+
+install:
+	pip install -e .
+
+install-dev:
+	pip install -e ".[dev]"
+	pre-commit install
+
+test:
+	pytest tests/ -v --cov=src/data_cleaning_automation --cov-report=html
+
+lint:
+	flake8 src tests
+	mypy src
+
+format:
+	black src tests
+	isort src tests
+
+clean:
+	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .mypy_cache/ htmlcov/ .coverage
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+
+docs:
+	cd docs && make html
+
+run-example:
+	python examples/basic_cleaning.py
+
+=== FILE END ===
+
+
+================================================================================
+FILE: README.md
+================================================================================
+
+=== FILE START ===
+# Data Cleaning Automation
+
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+A comprehensive Python toolkit for automated data cleaning and preprocessing. This project provides a modular, extensible framework to handle common data quality issues with minimal manual intervention.
+
+## Features
+
+- **Missing Value Handling**: Intelligent detection and imputation strategies
+- **Outlier Detection**: Statistical and ML-based anomaly detection
+- **Data Type Correction**: Automatic type inference and conversion
+- **Duplicate Removal**: Fuzzy and exact duplicate detection
+- **Text Cleaning**: Standardization, encoding fixes, and noise removal
+- **Pipeline Builder**: Chain multiple cleaning operations
+- **Reporting**: Generate detailed data quality reports
+- **Extensible**: Easy to add custom cleaning operations
+
+## Quick Start
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/data-cleaning-automation.git
+cd data-cleaning-automation
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install in development mode
+pip install -e .
+```
+
+### Basic Usage
+
+```python
+import pandas as pd
+from data_cleaning_automation import DataCleaningPipeline
+
+# Load your data
+df = pd.read_csv("data/raw/sample.csv")
+
+# Create and run cleaning pipeline
+pipeline = DataCleaningPipeline()
+pipeline.add_step("remove_duplicates")
+pipeline.add_step("handle_missing", strategy="median")
+pipeline.add_step("remove_outliers", method="iqr")
+pipeline.add_step("correct_types")
+
+cleaned_df, report = pipeline.run(df)
+
+print(f"Original rows: {report['original_rows']}")
+print(f"Final rows: {report['final_rows']}")
+print(f"Issues fixed: {report['issues_fixed']}")
+```
+
+## Project Structure
+
+```
+data-cleaning-automation/
+├── src/data_cleaning_automation/    # Main source code
+│   ├── core/                        # Core cleaning operations
+│   ├── utils/                       # Utility functions
+│   └── __init__.py                  # Package initialization
+├── tests/                           # Test suite
+│   ├── unit/                        # Unit tests
+│   └── integration/                 # Integration tests
+├── examples/                        # Usage examples
+├── notebooks/                       # Jupyter notebooks
+├── data/                            # Sample data
+├── docs/                            # Documentation
+├── scripts/                         # Utility scripts
+├── requirements.txt                 # Dependencies
+├── setup.py                         # Package setup
+├── pyproject.toml                   # Modern Python packaging
+└── README.md                        # This file
+```
+
+## Core Components
+
+### 1. Missing Value Handler
+```python
+from data_cleaning_automation.core import MissingValueHandler
+
+handler = MissingValueHandler()
+# Strategies: 'mean', 'median', 'mode', 'constant', 'knn', 'iterative'
+cleaned = handler.handle(df, strategy="median")
+```
+
+### 2. Outlier Detector
+```python
+from data_cleaning_automation.core import OutlierDetector
+
+detector = OutlierDetector(method="iqr")  # or 'zscore', 'isolation_forest'
+outliers = detector.detect(df["column_name"])
+```
+
+### 3. Type Corrector
+```python
+from data_cleaning_automation.core import TypeCorrector
+
+corrector = TypeCorrector()
+corrected_df = corrector.infer_and_convert(df)
+```
+
+### 4. Duplicate Handler
+```python
+from data_cleaning_automation.core import DuplicateHandler
+
+handler = DuplicateHandler(fuzzy_threshold=0.85)
+cleaned = handler.remove_duplicates(df)
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=src/data_cleaning_automation --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_missing_value_handler.py -v
+```
+
+## Examples
+
+Check the `examples/` directory for detailed usage examples:
+- `basic_cleaning.py` - Simple data cleaning workflow
+- `advanced_pipeline.py` - Complex multi-step pipeline
+- `custom_operations.py` - Creating custom cleaning operations
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with [pandas](https://pandas.pydata.org/) and [scikit-learn](https://scikit-learn.org/)
+- Inspired by data quality best practices from [Great Expectations](https://greatexpectations.io/)
+
+=== FILE END ===
+
+
+================================================================================
+FILE: data/processed/.gitkeep
+================================================================================
+
+=== FILE START ===
+
+
+=== FILE END ===
+
+
+================================================================================
+FILE: data/raw/.gitkeep
+================================================================================
+
+=== FILE START ===
+
+
+=== FILE END ===
+
+
+================================================================================
+FILE: examples/advanced_pipeline.py
+================================================================================
+
+=== FILE START ===
+#!/usr/bin/env python3
+"""Advanced pipeline with custom configuration."""
+
+import pandas as pd
+import numpy as np
+from data_cleaning_automation import (
+    DataCleaningPipeline,
+    MissingValueHandler,
+    OutlierDetector,
+    TypeCorrector,
+    DuplicateHandler,
+    TextCleaner
+)
+
+
+def custom_cleaning_workflow():
+    """Demonstrate advanced cleaning with fine-grained control."""
+    df = pd.DataFrame({
+        'customer_id': ['C001', 'C002', 'C003', 'C001', 'C004'],
+        'name': ['  John Doe  ', 'JANE SMITH', 'Bob', 'john doe', 'Alice'],
+        'email': ['john@email.com', 'jane@email.com', None, 'john@email.com', 'alice@email.com'],
+        'age': [25, 150, 30, 25, 28],
+        'purchase_amount': ['100.50', '250.00', 'invalid', '100.50', '75.25'],
+        'registration_date': ['2023-01-15', '2023/02/20', 'March 2023', '2023-01-15', '2023-05-10']
+    })
+
+    print("=" * 60)
+    print("ADVANCED DATA CLEANING WORKFLOW")
+    print("=" * 60)
+
+    print("\n1. Removing duplicates...")
+    dup_handler = DuplicateHandler()
+    df = dup_handler.remove_exact(df, subset=['customer_id'])
+    print(f"   Remaining rows: {len(df)}")
+
+    print("\n2. Cleaning text fields...")
+    text_cleaner = TextCleaner()
+    df = text_cleaner.clean_all(df, columns=['name', 'email'])
+    print("   Text standardized")
+
+    print("\n3. Handling missing values...")
+    mv_handler = MissingValueHandler()
+    df = mv_handler.handle(df, strategy='constant', fill_value='UNKNOWN')
+    print("   Missing values filled")
+
+    print("\n4. Removing outliers...")
+    outlier_det = OutlierDetector(method='iqr')
+    df = outlier_det.remove(df, columns=['age'])
+    print(f"   Remaining rows: {len(df)}")
+
+    print("\n5. Correcting data types...")
+    type_corr = TypeCorrector()
+    df = type_corr.convert(df)
+    print("   Types corrected")
+
+    print("\n6. Optimizing memory...")
+    df = type_corr.optimize_memory(df)
+
+    print("\n" + "=" * 60)
+    print("FINAL RESULT")
+    print("=" * 60)
+    print(df)
+    print(f"\nData types:\n{df.dtypes}")
+    print(f"\nMemory usage: {df.memory_usage(deep=True).sum() / 1024:.2f} KB")
+
+
+if __name__ == "__main__":
+    custom_cleaning_workflow()
+
+=== FILE END ===
+
+
+================================================================================
+FILE: examples/basic_cleaning.py
+================================================================================
+
+=== FILE START ===
+#!/usr/bin/env python3
+"""Basic data cleaning example."""
+
+import pandas as pd
+import numpy as np
+from data_cleaning_automation import DataCleaningPipeline
+
+
+def main():
+    """Run basic cleaning example."""
+    df = pd.DataFrame({
+        'name': ['  John Doe  ', 'Jane Smith', 'john doe', 'Bob Wilson', None],
+        'age': [25, 30, 25, 200, 28],
+        'salary': ['50000', '60000', '55000', '70000', '58000'],
+        'department': ['IT', 'HR', 'it', 'Finance', 'HR']
+    })
+
+    print("Original Data:")
+    print(df)
+    print(f"\nShape: {df.shape}")
+
+    pipeline = DataCleaningPipeline()
+    pipeline.add_step('remove_duplicates')
+    pipeline.add_step('handle_missing', strategy='drop')
+    pipeline.add_step('remove_outliers', columns=['age'])
+    pipeline.add_step('correct_types')
+
+    cleaned, report = pipeline.run(df)
+
+    print("\n" + "="*50)
+    print("Cleaned Data:")
+    print(cleaned)
+    print(f"\nFinal Shape: {cleaned.shape}")
+
+    print("\n" + "="*50)
+    print("Report Summary:")
+    print(f"Original rows: {report['summary']['original_rows']}")
+    print(f"Final rows: {report['summary']['final_rows']}")
+    print(f"Data quality: {report['data_quality']['completeness_score']}%")
+
+
+if __name__ == "__main__":
+    main()
+
+=== FILE END ===
+
+
+================================================================================
+FILE: pyproject.toml
+================================================================================
+
+=== FILE START ===
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "data-cleaning-automation"
+version = "0.1.0"
+description = "A comprehensive toolkit for automated data cleaning and preprocessing"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=1.5.0",
+    "numpy>=1.21.0",
+    "scikit-learn>=1.1.0",
+    "pydantic>=1.10.0",
+    "regex>=2022.0.0",
+    "chardet>=5.0.0",
+    "thefuzz>=0.19.0",
+    "python-Levenshtein>=0.20.0",
+    "scipy>=1.9.0",
+    "tqdm>=4.64.0",
+    "structlog>=22.0.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=0.990",
+    "isort>=5.10.0",
+    "pre-commit>=2.20.0",
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "jupyter>=1.0.0",
+    "ipython>=8.0.0",
+    "pandas-stubs>=1.5.0",
+]
+
+[project.scripts]
+data-clean = "data_cleaning_automation.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/data-cleaning-automation"
+Documentation = "https://github.com/yourusername/data-cleaning-automation/tree/main/docs"
+Repository = "https://github.com/yourusername/data-cleaning-automation"
+Issues = "https://github.com/yourusername/data-cleaning-automation/issues"
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+include = "\.pyi?$"
+exclude = """
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+"""
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["src", "tests"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+=== FILE END ===
+
+
+================================================================================
+FILE: requirements-dev.txt
+================================================================================
+
+=== FILE START ===
+# Development dependencies
+-r requirements.txt
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Code quality
+black>=22.0.0
+flake8>=5.0.0
+mypy>=0.990
+isort>=5.10.0
+
+# Pre-commit hooks
+pre-commit>=2.20.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Jupyter
+jupyter>=1.0.0
+ipython>=8.0.0
+
+# Type stubs
+pandas-stubs>=1.5.0
+
+=== FILE END ===
+
+
+================================================================================
+FILE: requirements.txt
+================================================================================
+
+=== FILE START ===
+# Core dependencies
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.1.0
+
+# Data validation and type checking
+pydantic>=1.10.0
+
+# Text processing
+regex>=2022.0.0
+chardet>=5.0.0
+
+# Fuzzy matching for duplicate detection
+thefuzz>=0.19.0
+python-Levenshtein>=0.20.0
+
+# Outlier detection
+scipy>=1.9.0
+
+# Progress bars
+tqdm>=4.64.0
+
+# Logging and monitoring
+structlog>=22.0.0
+
+# Configuration
+PyYAML>=6.0
+
+# Development dependencies (install with: pip install -r requirements-dev.txt)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=22.0.0
+# flake8>=5.0.0
+# mypy>=0.990
+# pre-commit>=2.20.0
+
+=== FILE END ===
+
+
+================================================================================
+FILE: setup.py
+================================================================================
+
+=== FILE START ===
+"""Setup script for data-cleaning-automation package."""
+
+from setuptools import setup, find_packages
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+with open("requirements.txt", "r", encoding="utf-8") as fh:
+    requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+
+setup(
+    name="data-cleaning-automation",
+    version="0.1.0",
+    author="Your Name",
+    author_email="your.email@example.com",
+    description="A comprehensive toolkit for automated data cleaning and preprocessing",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/yourusername/data-cleaning-automation",
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
+    python_requires=">=3.9",
+    install_requires=requirements,
+    extras_require={
+        "dev": [
+            "pytest>=7.0.0",
+            "pytest-cov>=4.0.0",
+            "black>=22.0.0",
+            "flake8>=5.0.0",
+            "mypy>=0.990",
+        ],
+    },
+    entry_points={
+        "console_scripts": [
+            "data-clean=data_cleaning_automation.cli:main",
+        ],
+    },
+)
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/__init__.py
+================================================================================
+
+=== FILE START ===
+"""Data Cleaning Automation - A comprehensive toolkit for automated data cleaning.
+
+This package provides modular, extensible components for handling common
+data quality issues with minimal manual intervention.
+"""
+
+from data_cleaning_automation.core.missing_value_handler import MissingValueHandler
+from data_cleaning_automation.core.outlier_detector import OutlierDetector
+from data_cleaning_automation.core.type_corrector import TypeCorrector
+from data_cleaning_automation.core.duplicate_handler import DuplicateHandler
+from data_cleaning_automation.core.text_cleaner import TextCleaner
+from data_cleaning_automation.core.pipeline import DataCleaningPipeline
+from data_cleaning_automation.core.report_generator import ReportGenerator
+
+__version__ = "0.1.0"
+__author__ = "Your Name"
+__email__ = "your.email@example.com"
+
+__all__ = [
+    "MissingValueHandler",
+    "OutlierDetector",
+    "TypeCorrector",
+    "DuplicateHandler",
+    "TextCleaner",
+    "DataCleaningPipeline",
+    "ReportGenerator",
+]
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/__init__.py
+================================================================================
+
+=== FILE START ===
+"""Core data cleaning operations module."""
+
+from .missing_value_handler import MissingValueHandler
+from .outlier_detector import OutlierDetector
+from .type_corrector import TypeCorrector
+from .duplicate_handler import DuplicateHandler
+from .text_cleaner import TextCleaner
+from .pipeline import DataCleaningPipeline
+from .report_generator import ReportGenerator
+
+__all__ = [
+    "MissingValueHandler",
+    "OutlierDetector",
+    "TypeCorrector",
+    "DuplicateHandler",
+    "TextCleaner",
+    "DataCleaningPipeline",
+    "ReportGenerator",
+]
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/duplicate_handler.py
+================================================================================
+
+=== FILE START ===
+"""Duplicate detection and removal module."""
+
+import pandas as pd
+from typing import Optional, List
+from thefuzz import fuzz
+
+from data_cleaning_automation.utils.logger import get_logger
+from data_cleaning_automation.utils.validators import validate_dataframe
+
+logger = get_logger(__name__)
+
+
+class DuplicateHandler:
+    """Handle exact and fuzzy duplicates in DataFrames."""
+
+    def __init__(self, fuzzy_threshold: float = 0.9):
+        """Initialize the DuplicateHandler.
+
+        Args:
+            fuzzy_threshold: Similarity threshold for fuzzy matching (0-1)
+        """
+        self.fuzzy_threshold = fuzzy_threshold
+        self.duplicate_stats = {}
+
+    def find_exact(self, df: pd.DataFrame, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        """Find exact duplicate rows."""
+        validate_dataframe(df)
+
+        duplicates = df[df.duplicated(subset=subset, keep=False)]
+        self.duplicate_stats['exact'] = len(duplicates)
+
+        logger.info(f"Found {len(duplicates)} exact duplicate rows")
+        return duplicates
+
+    def remove_exact(self, df: pd.DataFrame, subset: Optional[List[str]] = None,
+                     keep: str = 'first') -> pd.DataFrame:
+        """Remove exact duplicate rows."""
+        validate_dataframe(df)
+
+        original_len = len(df)
+        result = df.drop_duplicates(subset=subset, keep=keep)
+        removed = original_len - len(result)
+
+        logger.info(f"Removed {removed} exact duplicate rows")
+        return result
+
+    def find_fuzzy(self, df: pd.DataFrame, column: str,
+                   text_columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Find fuzzy duplicates using string similarity."""
+        validate_dataframe(df)
+
+        if column not in df.columns:
+            raise ValueError(f"Column '{column}' not found")
+
+        values = df[column].dropna().astype(str).unique()
+        fuzzy_pairs = []
+
+        for i, val1 in enumerate(values):
+            for val2 in values[i+1:]:
+                similarity = fuzz.ratio(val1.lower(), val2.lower()) / 100.0
+                if similarity >= self.fuzzy_threshold:
+                    fuzzy_pairs.append({
+                        'value_1': val1,
+                        'value_2': val2,
+                        'similarity': similarity
+                    })
+
+        self.duplicate_stats['fuzzy_pairs'] = len(fuzzy_pairs)
+        logger.info(f"Found {len(fuzzy_pairs)} fuzzy duplicate pairs")
+
+        return pd.DataFrame(fuzzy_pairs)
+
+    def standardize_fuzzy(self, df: pd.DataFrame, column: str,
+                            mapping: Optional[dict] = None) -> pd.DataFrame:
+        """Standardize fuzzy duplicates to canonical forms."""
+        result = df.copy()
+
+        if mapping:
+            result[column] = result[column].replace(mapping)
+        else:
+            fuzzy_pairs = self.find_fuzzy(result, column)
+            if not fuzzy_pairs.empty:
+                for _, row in fuzzy_pairs.iterrows():
+                    val1, val2 = row['value_1'], row['value_2']
+                    canonical = val1 if len(val1) <= len(val2) else val2
+                    result[column] = result[column].replace([val1, val2], canonical)
+
+        logger.info(f"Standardized fuzzy duplicates in '{column}'")
+        return result
+
+    def get_stats(self) -> dict:
+        """Get duplicate handling statistics."""
+        return self.duplicate_stats
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/missing_value_handler.py
+================================================================================
+
+=== FILE START ===
+"""Missing value detection and imputation module."""
+
+import pandas as pd
+import numpy as np
+from typing import Union, Optional, Literal
+from sklearn.impute import KNNImputer, SimpleImputer
+from sklearn.experimental import enable_iterative_imputer  # noqa
+from sklearn.impute import IterativeImputer
+
+from data_cleaning_automation.utils.logger import get_logger
+from data_cleaning_automation.utils.validators import validate_dataframe
+
+logger = get_logger(__name__)
+
+
+class MissingValueHandler:
+    """Handle missing values in DataFrames with multiple strategies."""
+
+    def __init__(self):
+        """Initialize the MissingValueHandler."""
+        self.imputation_stats = {}
+
+    def detect(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Detect and report missing values in the DataFrame.
+
+        Args:
+            df: Input DataFrame
+
+        Returns:
+            DataFrame with missing value statistics per column
+        """
+        validate_dataframe(df)
+
+        missing_count = df.isnull().sum()
+        missing_percent = (missing_count / len(df)) * 100
+
+        report = pd.DataFrame({
+            "missing_count": missing_count,
+            "missing_percent": missing_percent,
+            "dtype": df.dtypes
+        })
+
+        logger.info(f"Detected {missing_count.sum()} total missing values")
+        return report[report["missing_count"] > 0].sort_values("missing_percent", ascending=False)
+
+    def handle(
+        self,
+        df: pd.DataFrame,
+        strategy: Literal["drop", "mean", "median", "mode", "constant", "knn", "iterative"] = "median",
+        fill_value: Optional[Union[int, float, str]] = None,
+        threshold: float = 0.5,
+        **kwargs
+    ) -> pd.DataFrame:
+        """Handle missing values using specified strategy.
+
+        Args:
+            df: Input DataFrame
+            strategy: Imputation strategy
+            fill_value: Value to use for constant imputation
+            threshold: Drop columns with missing ratio above this threshold
+            **kwargs: Additional arguments for specific imputers
+
+        Returns:
+            DataFrame with missing values handled
+        """
+        validate_dataframe(df)
+        result = df.copy()
+        original_shape = result.shape
+
+        # Drop columns with too many missing values
+        missing_ratio = result.isnull().mean()
+        cols_to_drop = missing_ratio[missing_ratio > threshold].index.tolist()
+        if cols_to_drop:
+            result = result.drop(columns=cols_to_drop)
+            logger.info(f"Dropped columns with >{threshold*100}% missing: {cols_to_drop}")
+
+        if strategy == "drop":
+            result = result.dropna()
+            logger.info(f"Dropped {original_shape[0] - len(result)} rows with missing values")
+
+        elif strategy in ["mean", "median", "most_frequent", "constant"]:
+            numeric_cols = result.select_dtypes(include=[np.number]).columns
+            categorical_cols = result.select_dtypes(include=["object", "category"]).columns
+
+            if len(numeric_cols) > 0:
+                if strategy == "constant":
+                    num_imputer = SimpleImputer(strategy="constant", fill_value=fill_value or 0)
+                else:
+                    num_imputer = SimpleImputer(strategy=strategy)
+                result[numeric_cols] = num_imputer.fit_transform(result[numeric_cols])
+
+            if len(categorical_cols) > 0:
+                cat_imputer = SimpleImputer(strategy="most_frequent")
+                result[categorical_cols] = cat_imputer.fit_transform(result[categorical_cols])
+
+        elif strategy == "knn":
+            numeric_cols = result.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 0:
+                n_neighbors = kwargs.get("n_neighbors", 5)
+                imputer = KNNImputer(n_neighbors=n_neighbors)
+                result[numeric_cols] = imputer.fit_transform(result[numeric_cols])
+
+        elif strategy == "iterative":
+            numeric_cols = result.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 0:
+                imputer = IterativeImputer(random_state=42)
+                result[numeric_cols] = imputer.fit_transform(result[numeric_cols])
+
+        self.imputation_stats = {
+            "strategy": strategy,
+            "original_shape": original_shape,
+            "final_shape": result.shape,
+            "columns_dropped": cols_to_drop
+        }
+
+        logger.info(f"Missing value handling complete. Shape: {original_shape} -> {result.shape}")
+        return result
+
+    def get_stats(self) -> dict:
+        """Get statistics from the last imputation operation."""
+        return self.imputation_stats
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/outlier_detector.py
+================================================================================
+
+=== FILE START ===
+"""Outlier detection and handling module."""
+
+import pandas as pd
+import numpy as np
+from typing import Literal, Optional
+from scipy import stats
+from sklearn.ensemble import IsolationForest
+
+from data_cleaning_automation.utils.logger import get_logger
+from data_cleaning_automation.utils.validators import validate_dataframe
+
+logger = get_logger(__name__)
+
+
+class OutlierDetector:
+    """Detect and handle outliers in numerical data."""
+
+    def __init__(self, method: Literal["iqr", "zscore", "isolation_forest"] = "iqr"):
+        """Initialize the OutlierDetector.
+
+        Args:
+            method: Detection method to use
+        """
+        self.method = method
+        self.outlier_stats = {}
+
+    def detect(self, df: pd.DataFrame, columns: Optional[list] = None) -> pd.DataFrame:
+        """Detect outliers in specified columns.
+
+        Args:
+            df: Input DataFrame
+            columns: Columns to check (None = all numeric)
+
+        Returns:
+            DataFrame with outlier flags
+        """
+        validate_dataframe(df)
+        result = df.copy()
+
+        if columns is None:
+            columns = df.select_dtypes(include=[np.number]).columns.tolist()
+
+        outlier_mask = pd.Series(False, index=df.index)
+
+        for col in columns:
+            if col not in df.columns:
+                logger.warning(f"Column '{col}' not found, skipping")
+                continue
+
+            if self.method == "iqr":
+                Q1 = df[col].quantile(0.25)
+                Q3 = df[col].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                col_outliers = (df[col] < lower_bound) | (df[col] > upper_bound)
+
+            elif self.method == "zscore":
+                z_scores = np.abs(stats.zscore(df[col].dropna()))
+                col_outliers = pd.Series(False, index=df.index)
+                valid_idx = df[col].dropna().index
+                col_outliers.loc[valid_idx] = z_scores > 3
+
+            elif self.method == "isolation_forest":
+                col_data = df[[col]].dropna()
+                if len(col_data) > 0:
+                    iso = IsolationForest(contamination=0.1, random_state=42)
+                    predictions = iso.fit_predict(col_data)
+                    col_outliers = pd.Series(False, index=df.index)
+                    col_outliers.loc[col_data.index] = predictions == -1
+                else:
+                    col_outliers = pd.Series(False, index=df.index)
+
+            outlier_mask |= col_outliers
+            self.outlier_stats[col] = col_outliers.sum()
+
+        result["is_outlier"] = outlier_mask
+        total_outliers = outlier_mask.sum()
+        logger.info(f"Detected {total_outliers} outliers using {self.method} method")
+
+        return result
+
+    def remove(self, df: pd.DataFrame, columns: Optional[list] = None) -> pd.DataFrame:
+        """Remove rows containing outliers.
+
+        Args:
+            df: Input DataFrame
+            columns: Columns to check
+
+        Returns:
+            DataFrame with outliers removed
+        """
+        detected = self.detect(df, columns)
+        cleaned = detected[~detected["is_outlier"]].drop(columns=["is_outlier"])
+
+        removed_count = len(df) - len(cleaned)
+        logger.info(f"Removed {removed_count} outlier rows")
+
+        return cleaned
+
+    def cap(self, df: pd.DataFrame, columns: Optional[list] = None) -> pd.DataFrame:
+        """Cap outliers at bounds instead of removing.
+
+        Args:
+            df: Input DataFrame
+            columns: Columns to process
+
+        Returns:
+            DataFrame with outliers capped
+        """
+        validate_dataframe(df)
+        result = df.copy()
+
+        if columns is None:
+            columns = df.select_dtypes(include=[np.number]).columns.tolist()
+
+        for col in columns:
+            if col not in df.columns:
+                continue
+
+            Q1 = df[col].quantile(0.25)
+            Q3 = df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+
+            result[col] = result[col].clip(lower=lower_bound, upper=upper_bound)
+
+        logger.info(f"Capped outliers in columns: {columns}")
+        return result
+
+    def get_stats(self) -> dict:
+        """Get outlier detection statistics."""
+        return self.outlier_stats
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/pipeline.py
+================================================================================
+
+=== FILE START ===
+"""Data cleaning pipeline builder module."""
+
+import pandas as pd
+from typing import List, Dict, Any, Optional, Callable
+from dataclasses import dataclass
+
+from data_cleaning_automation.utils.logger import get_logger
+from data_cleaning_automation.utils.validators import validate_dataframe
+from .missing_value_handler import MissingValueHandler
+from .outlier_detector import OutlierDetector
+from .type_corrector import TypeCorrector
+from .duplicate_handler import DuplicateHandler
+from .text_cleaner import TextCleaner
+from .report_generator import ReportGenerator
+
+logger = get_logger(__name__)
+
+
+@dataclass
+class PipelineStep:
+    """Represents a single step in the cleaning pipeline."""
+    name: str
+    operation: Callable
+    params: Dict[str, Any]
+    enabled: bool = True
+
+
+class DataCleaningPipeline:
+    """Build and execute multi-step data cleaning pipelines."""
+
+    def __init__(self):
+        """Initialize an empty pipeline."""
+        self.steps: List[PipelineStep] = []
+        self.report_generator = ReportGenerator()
+        self.execution_log = []
+
+    def add_step(self, name: str, **params) -> 'DataCleaningPipeline':
+        """Add a cleaning step to the pipeline."""
+        operations = {
+            'remove_duplicates': self._remove_duplicates,
+            'handle_missing': self._handle_missing,
+            'remove_outliers': self._remove_outliers,
+            'correct_types': self._correct_types,
+            'clean_text': self._clean_text,
+            'cap_outliers': self._cap_outliers,
+        }
+
+        if name not in operations:
+            raise ValueError(f"Unknown operation: {name}. Available: {list(operations.keys())}")
+
+        step = PipelineStep(
+            name=name,
+            operation=operations[name],
+            params=params
+        )
+        self.steps.append(step)
+        logger.info(f"Added step: {name}")
+        return self
+
+    def _remove_duplicates(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        handler = DuplicateHandler()
+        return handler.remove_exact(df, **params)
+
+    def _handle_missing(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        handler = MissingValueHandler()
+        return handler.handle(df, **params)
+
+    def _remove_outliers(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        detector = OutlierDetector(**params)
+        return detector.remove(df)
+
+    def _cap_outliers(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        detector = OutlierDetector(**params)
+        return detector.cap(df)
+
+    def _correct_types(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        corrector = TypeCorrector()
+        return corrector.convert(df, **params)
+
+    def _clean_text(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        cleaner = TextCleaner()
+        return cleaner.clean_all(df, **params)
+
+    def run(self, df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+        """Execute all pipeline steps."""
+        validate_dataframe(df)
+
+        original_shape = df.shape
+        result = df.copy()
+        self.execution_log = []
+
+        for step in self.steps:
+            if not step.enabled:
+                continue
+
+            logger.info(f"Executing: {step.name}")
+            step_start_shape = result.shape
+
+            try:
+                result = step.operation(result, **step.params)
+                self.execution_log.append({
+                    'step': step.name,
+                    'input_shape': step_start_shape,
+                    'output_shape': result.shape,
+                    'status': 'success'
+                })
+            except Exception as e:
+                self.execution_log.append({
+                    'step': step.name,
+                    'input_shape': step_start_shape,
+                    'error': str(e),
+                    'status': 'failed'
+                })
+                logger.error(f"Step '{step.name}' failed: {e}")
+                raise
+
+        report = self.report_generator.generate(result, original_shape, self.execution_log)
+
+        logger.info(f"Pipeline complete: {original_shape} -> {result.shape}")
+        return result, report
+
+    def get_execution_log(self) -> List[dict]:
+        """Get the execution log from the last run."""
+        return self.execution_log
+
+    def __repr__(self) -> str:
+        steps_str = '\n'.join(f"  {i+1}. {s.name}" for i, s in enumerate(self.steps))
+        return f"DataCleaningPipeline({len(self.steps)} steps):\n{steps_str}"
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/report_generator.py
+================================================================================
+
+=== FILE START ===
+"""Data quality report generation module."""
+
+import pandas as pd
+from typing import Dict, List, Any, Tuple
+from datetime import datetime
+
+from data_cleaning_automation.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+class ReportGenerator:
+    """Generate comprehensive data quality reports."""
+
+    def __init__(self):
+        """Initialize the ReportGenerator."""
+        pass
+
+    def generate(self, df: pd.DataFrame, original_shape: Tuple[int, int],
+                 execution_log: List[dict]) -> dict:
+        """Generate a comprehensive cleaning report."""
+        report = {
+            'timestamp': datetime.now().isoformat(),
+            'summary': self._generate_summary(df, original_shape),
+            'data_quality': self._assess_quality(df),
+            'execution_log': execution_log,
+            'column_stats': self._column_statistics(df),
+            'recommendations': self._generate_recommendations(df)
+        }
+
+        logger.info("Report generated successfully")
+        return report
+
+    def _generate_summary(self, df: pd.DataFrame,
+                          original_shape: Tuple[int, int]) -> dict:
+        """Generate high-level summary statistics."""
+        rows_removed = original_shape[0] - len(df)
+        cols_removed = original_shape[1] - len(df.columns)
+
+        return {
+            'original_rows': original_shape[0],
+            'original_columns': original_shape[1],
+            'final_rows': len(df),
+            'final_columns': len(df.columns),
+            'rows_removed': rows_removed,
+            'columns_removed': cols_removed,
+            'rows_removed_percent': round(rows_removed / original_shape[0] * 100, 2) if original_shape[0] > 0 else 0
+        }
+
+    def _assess_quality(self, df: pd.DataFrame) -> dict:
+        """Assess overall data quality metrics."""
+        total_cells = df.size
+        missing_cells = df.isnull().sum().sum()
+
+        completeness = (1 - missing_cells / total_cells) * 100 if total_cells > 0 else 100
+        uniqueness = (df.drop_duplicates().shape[0] / len(df)) * 100 if len(df) > 0 else 100
+
+        return {
+            'completeness_score': round(completeness, 2),
+            'uniqueness_score': round(uniqueness, 2),
+            'total_missing_values': int(missing_cells),
+            'duplicate_rows': int(len(df) - df.drop_duplicates().shape[0]),
+            'memory_usage_mb': round(df.memory_usage(deep=True).sum() / 1024**2, 2)
+        }
+
+    def _column_statistics(self, df: pd.DataFrame) -> dict:
+        """Generate per-column statistics."""
+        stats = {}
+
+        for col in df.columns:
+            col_stats = {
+                'dtype': str(df[col].dtype),
+                'non_null_count': int(df[col].notna().sum()),
+                'null_count': int(df[col].isna().sum()),
+                'null_percent': round(df[col].isna().mean() * 100, 2),
+                'unique_values': int(df[col].nunique())
+            }
+
+            if pd.api.types.is_numeric_dtype(df[col]):
+                col_stats.update({
+                    'min': float(df[col].min()) if not pd.isna(df[col].min()) else None,
+                    'max': float(df[col].max()) if not pd.isna(df[col].max()) else None,
+                    'mean': float(df[col].mean()) if not pd.isna(df[col].mean()) else None,
+                    'std': float(df[col].std()) if not pd.isna(df[col].std()) else None
+                })
+
+            stats[col] = col_stats
+
+        return stats
+
+    def _generate_recommendations(self, df: pd.DataFrame) -> List[str]:
+        """Generate data quality recommendations."""
+        recommendations = []
+
+        for col in df.columns:
+            missing_pct = df[col].isna().mean() * 100
+            if missing_pct > 50:
+                recommendations.append(
+                    f"Column '{col}' has {missing_pct:.1f}% missing values - consider dropping"
+                )
+
+        for col in df.columns:
+            if df[col].nunique() == 1:
+                recommendations.append(
+                    f"Column '{col}' has only one unique value - consider dropping"
+                )
+
+        for col in df.select_dtypes(include=['object']).columns:
+            if df[col].nunique() == len(df):
+                recommendations.append(
+                    f"Column '{col}' appears to be an ID column"
+                )
+
+        if not recommendations:
+            recommendations.append("Data quality looks good - no major issues detected")
+
+        return recommendations
+
+    def to_markdown(self, report: dict) -> str:
+        """Convert report to Markdown format."""
+        md = f"""# Data Cleaning Report
+
+Generated: {report['timestamp']}
+
+## Summary
+
+| Metric | Value |
+|--------|-------|
+| Original Rows | {report['summary']['original_rows']:,} |
+| Final Rows | {report['summary']['final_rows']:,} |
+| Rows Removed | {report['summary']['rows_removed']:,} ({report['summary']['rows_removed_percent']}%) |
+| Final Columns | {report['summary']['final_columns']} |
+
+## Data Quality Score
+
+- **Completeness**: {report['data_quality']['completeness_score']}%
+- **Uniqueness**: {report['data_quality']['uniqueness_score']}%
+- **Missing Values**: {report['data_quality']['total_missing_values']:,}
+- **Memory Usage**: {report['data_quality']['memory_usage_mb']} MB
+
+## Recommendations
+
+"""
+        for rec in report['recommendations']:
+            md += f"- {rec}\n"
+
+        md += "\n## Execution Log\n\n| Step | Status | Input Shape | Output Shape |\n|------|--------|-------------|--------------|\n"
+        for log in report['execution_log']:
+            md += f"| {log['step']} | {log['status']} | {log.get('input_shape', 'N/A')} | {log.get('output_shape', 'N/A')} |\n"
+
+        return md
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/text_cleaner.py
+================================================================================
+
+=== FILE START ===
+"""Text data cleaning and standardization module."""
+
+import re
+import pandas as pd
+from typing import Optional, List
+import chardet
+
+from data_cleaning_automation.utils.logger import get_logger
+from data_cleaning_automation.utils.validators import validate_dataframe
+
+logger = get_logger(__name__)
+
+
+class TextCleaner:
+    """Clean and standardize text data in DataFrames."""
+
+    def __init__(self):
+        """Initialize the TextCleaner."""
+        self.cleaning_stats = {}
+
+    def fix_encoding(self, df: pd.DataFrame, columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Fix encoding issues in text columns."""
+        validate_dataframe(df)
+        result = df.copy()
+
+        if columns is None:
+            columns = df.select_dtypes(include=['object']).columns.tolist()
+
+        fixed_count = 0
+        for col in columns:
+            if col not in result.columns:
+                continue
+
+            for idx in result[col].dropna().index:
+                value = str(result.at[idx, col])
+                try:
+                    if isinstance(value, bytes):
+                        detected = chardet.detect(value)
+                        result.at[idx, col] = value.decode(detected['encoding'] or 'utf-8')
+                        fixed_count += 1
+                except Exception:
+                    pass
+
+        self.cleaning_stats['encoding_fixed'] = fixed_count
+        logger.info(f"Fixed encoding for {fixed_count} values")
+        return result
+
+    def standardize_whitespace(self, df: pd.DataFrame,
+                                columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Standardize whitespace in text columns."""
+        result = df.copy()
+
+        if columns is None:
+            columns = df.select_dtypes(include=['object']).columns.tolist()
+
+        for col in columns:
+            if col in result.columns:
+                result[col] = result[col].astype(str).str.strip()
+                result[col] = result[col].str.replace(r'\s+', ' ', regex=True)
+
+        logger.info(f"Standardized whitespace in {len(columns)} columns")
+        return result
+
+    def remove_special_chars(self, df: pd.DataFrame,
+                              columns: Optional[List[str]] = None,
+                              keep_chars: str = '') -> pd.DataFrame:
+        """Remove special characters from text."""
+        result = df.copy()
+
+        if columns is None:
+            columns = df.select_dtypes(include=['object']).columns.tolist()
+
+        pattern = f'[^a-zA-Z0-9\s{re.escape(keep_chars)}]'
+
+        for col in columns:
+            if col in result.columns:
+                result[col] = result[col].astype(str).str.replace(pattern, '', regex=True)
+
+        logger.info(f"Removed special characters from {len(columns)} columns")
+        return result
+
+    def standardize_case(self, df: pd.DataFrame,
+                          columns: Optional[List[str]] = None,
+                          case: str = 'lower') -> pd.DataFrame:
+        """Standardize text case."""
+        result = df.copy()
+
+        if columns is None:
+            columns = df.select_dtypes(include=['object']).columns.tolist()
+
+        for col in columns:
+            if col in result.columns:
+                if case == 'lower':
+                    result[col] = result[col].astype(str).str.lower()
+                elif case == 'upper':
+                    result[col] = result[col].astype(str).str.upper()
+                elif case == 'title':
+                    result[col] = result[col].astype(str).str.title()
+
+        logger.info(f"Standardized case to '{case}' in {len(columns)} columns")
+        return result
+
+    def clean_all(self, df: pd.DataFrame, columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Apply all text cleaning operations."""
+        result = self.fix_encoding(df, columns)
+        result = self.standardize_whitespace(result, columns)
+        result = self.standardize_case(result, columns, case='lower')
+
+        logger.info("Completed full text cleaning pipeline")
+        return result
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/core/type_corrector.py
+================================================================================
+
+=== FILE START ===
+"""Automatic data type inference and correction module."""
+
+import pandas as pd
+import numpy as np
+from typing import Optional
+
+from data_cleaning_automation.utils.logger import get_logger
+from data_cleaning_automation.utils.validators import validate_dataframe
+
+logger = get_logger(__name__)
+
+
+class TypeCorrector:
+    """Automatically infer and correct data types in DataFrames."""
+
+    def __init__(self):
+        """Initialize the TypeCorrector."""
+        self.conversion_log = {}
+
+    def infer_types(self, df: pd.DataFrame) -> dict:
+        """Infer optimal data types for each column."""
+        validate_dataframe(df)
+
+        inferred = {}
+        for col in df.columns:
+            if df[col].dtype == 'object':
+                try:
+                    pd.to_datetime(df[col], errors='raise')
+                    inferred[col] = 'datetime'
+                    continue
+                except (ValueError, TypeError):
+                    pass
+
+                try:
+                    converted = pd.to_numeric(df[col], errors='coerce')
+                    if converted.notna().sum() / len(df) > 0.8:
+                        inferred[col] = 'numeric'
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+                if df[col].nunique() / len(df) < 0.5:
+                    inferred[col] = 'category'
+                else:
+                    inferred[col] = 'string'
+            else:
+                inferred[col] = str(df[col].dtype)
+
+        logger.info(f"Inferred types for {len(inferred)} columns")
+        return inferred
+
+    def convert(self, df: pd.DataFrame, type_map: Optional[dict] = None) -> pd.DataFrame:
+        """Convert columns to specified or inferred types."""
+        validate_dataframe(df)
+        result = df.copy()
+
+        if type_map is None:
+            type_map = self.infer_types(df)
+
+        for col, target_type in type_map.items():
+            if col not in result.columns:
+                continue
+
+            try:
+                if target_type == 'datetime':
+                    result[col] = pd.to_datetime(result[col], errors='coerce')
+                elif target_type == 'numeric':
+                    result[col] = pd.to_numeric(result[col], errors='coerce')
+                elif target_type == 'category':
+                    result[col] = result[col].astype('category')
+                elif target_type == 'string':
+                    result[col] = result[col].astype('string')
+                elif target_type == 'int':
+                    result[col] = result[col].astype('Int64')
+                elif target_type == 'float':
+                    result[col] = result[col].astype('Float64')
+
+                self.conversion_log[col] = {
+                    'from': str(df[col].dtype),
+                    'to': str(result[col].dtype)
+                }
+
+            except Exception as e:
+                logger.warning(f"Failed to convert {col}: {e}")
+
+        logger.info(f"Converted {len(self.conversion_log)} columns")
+        return result
+
+    def optimize_memory(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Optimize memory usage by downcasting numeric types."""
+        result = df.copy()
+
+        for col in result.select_dtypes(include=['int']).columns:
+            result[col] = pd.to_numeric(result[col], downcast='integer')
+
+        for col in result.select_dtypes(include=['float']).columns:
+            result[col] = pd.to_numeric(result[col], downcast='float')
+
+        for col in result.select_dtypes(include=['object']).columns:
+            num_unique = result[col].nunique()
+            num_total = len(result[col])
+            if num_unique / num_total < 0.5:
+                result[col] = result[col].astype('category')
+
+        original_mem = df.memory_usage(deep=True).sum() / 1024**2
+        new_mem = result.memory_usage(deep=True).sum() / 1024**2
+
+        logger.info(f"Memory optimized: {original_mem:.2f}MB -> {new_mem:.2f}MB")
+        return result
+
+    def get_conversion_log(self) -> dict:
+        """Get log of type conversions performed."""
+        return self.conversion_log
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/utils/__init__.py
+================================================================================
+
+=== FILE START ===
+"""Utility functions and helpers."""
+
+from .logger import get_logger
+from .validators import validate_dataframe
+
+__all__ = ["get_logger", "validate_dataframe"]
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/utils/logger.py
+================================================================================
+
+=== FILE START ===
+"""Logging configuration for data cleaning automation."""
+
+import logging
+import sys
+from typing import Optional
+
+
+def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
+    """Get a configured logger instance.
+
+    Args:
+        name: Logger name (typically __name__)
+        level: Logging level (default: INFO)
+
+    Returns:
+        Configured logger instance
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(level)
+
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    return logger
+
+=== FILE END ===
+
+
+================================================================================
+FILE: src/data_cleaning_automation/utils/validators.py
+================================================================================
+
+=== FILE START ===
+"""Data validation utilities."""
+
+import pandas as pd
+from typing import Optional
+
+
+def validate_dataframe(df: pd.DataFrame, required_columns: Optional[list] = None) -> None:
+    """Validate that input is a proper DataFrame.
+
+    Args:
+        df: Input DataFrame to validate
+        required_columns: List of required column names
+
+    Raises:
+        TypeError: If input is not a DataFrame
+        ValueError: If required columns are missing
+    """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError(f"Expected pandas DataFrame, got {type(df).__name__}")
+
+    if df.empty:
+        raise ValueError("DataFrame is empty")
+
+    if required_columns:
+        missing = set(required_columns) - set(df.columns)
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
+
+=== FILE END ===
+
+
+================================================================================
+FILE: tests/__init__.py
+================================================================================
+
+=== FILE START ===
+"""Test module."""
+
+=== FILE END ===
+
+
+================================================================================
+FILE: tests/integration/__init__.py
+================================================================================
+
+=== FILE START ===
+"""Test module."""
+
+=== FILE END ===
+
+
+================================================================================
+FILE: tests/integration/test_pipeline.py
+================================================================================
+
+=== FILE START ===
+"""Integration tests for DataCleaningPipeline."""
+
+import pytest
+import pandas as pd
+import numpy as np
+from data_cleaning_automation import DataCleaningPipeline
+
+
+@pytest.fixture
+def dirty_df():
+    """Create a realistically dirty DataFrame."""
+    return pd.DataFrame({
+        'id': [1, 2, 3, 4, 5, 5],
+        'age': [25, 30, np.nan, 35, 1000, 28],
+        'name': ['  John  ', 'Jane', 'Bob', 'alice', 'Charlie', '  john  '],
+        'salary': ['50000', '60000', '70000', 'invalid', '55000', '58000']
+    })
+
+
+class TestDataCleaningPipeline:
+    """Integration tests for the full pipeline."""
+
+    def test_full_pipeline(self, dirty_df):
+        """Test complete cleaning pipeline."""
+        pipeline = DataCleaningPipeline()
+        pipeline.add_step('remove_duplicates')
+        pipeline.add_step('handle_missing', strategy='median')
+        pipeline.add_step('remove_outliers', columns=['age'])
+        pipeline.add_step('correct_types')
+
+        cleaned, report = pipeline.run(dirty_df)
+
+        assert isinstance(cleaned, pd.DataFrame)
+        assert isinstance(report, dict)
+        assert 'summary' in report
+        assert 'data_quality' in report
+
+    def test_pipeline_report(self, dirty_df):
+        """Test report generation."""
+        pipeline = DataCleaningPipeline()
+        pipeline.add_step('remove_duplicates')
+
+        cleaned, report = pipeline.run(dirty_df)
+
+        assert report['summary']['original_rows'] == 6
+        assert report['summary']['final_rows'] == 5
+        assert 'recommendations' in report
+
+    def test_empty_pipeline(self):
+        """Test pipeline with no steps."""
+        pipeline = DataCleaningPipeline()
+        df = pd.DataFrame({'a': [1, 2, 3]})
+
+        cleaned, report = pipeline.run(df)
+
+        assert len(cleaned) == 3
+        assert report['summary']['original_rows'] == 3
+
+=== FILE END ===
+
+
+================================================================================
+FILE: tests/unit/__init__.py
+================================================================================
+
+=== FILE START ===
+"""Test module."""
+
+=== FILE END ===
+
+
+================================================================================
+FILE: tests/unit/test_missing_value_handler.py
+================================================================================
+
+=== FILE START ===
+"""Tests for MissingValueHandler."""
+
+import pytest
+import pandas as pd
+import numpy as np
+from data_cleaning_automation.core.missing_value_handler import MissingValueHandler
+
+
+@pytest.fixture
+def sample_df():
+    """Create a sample DataFrame with missing values."""
+    return pd.DataFrame({
+        'A': [1, 2, np.nan, 4, 5],
+        'B': ['x', np.nan, 'z', 'w', 'v'],
+        'C': [1.1, 2.2, 3.3, np.nan, 5.5]
+    })
+
+
+class TestMissingValueHandler:
+    """Test cases for MissingValueHandler."""
+
+    def test_detect(self, sample_df):
+        """Test missing value detection."""
+        handler = MissingValueHandler()
+        report = handler.detect(sample_df)
+
+        assert len(report) == 3
+        assert report.loc['A', 'missing_count'] == 1
+        assert report.loc['B', 'missing_count'] == 1
+
+    def test_handle_drop(self, sample_df):
+        """Test drop strategy."""
+        handler = MissingValueHandler()
+        result = handler.handle(sample_df, strategy='drop')
+
+        assert len(result) == 2
+
+    def test_handle_median(self, sample_df):
+        """Test median imputation."""
+        handler = MissingValueHandler()
+        result = handler.handle(sample_df, strategy='median')
+
+        assert result['A'].isna().sum() == 0
+        assert result['C'].isna().sum() == 0
+
+    def test_invalid_dataframe(self):
+        """Test validation with invalid input."""
+        handler = MissingValueHandler()
+
+        with pytest.raises(TypeError):
+            handler.detect("not a dataframe")
+
+        with pytest.raises(ValueError):
+            handler.detect(pd.DataFrame())
+
+=== FILE END ===
+
+
+================================================================================
+FILE: tests/unit/test_outlier_detector.py
+================================================================================
+
+=== FILE START ===
+"""Tests for OutlierDetector."""
+
+import pytest
+import pandas as pd
+import numpy as np
+from data_cleaning_automation.core.outlier_detector import OutlierDetector
+
+
+@pytest.fixture
+def sample_df():
+    """Create a sample DataFrame with outliers."""
+    return pd.DataFrame({
+        'normal': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'with_outliers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 1000]
+    })
+
+
+class TestOutlierDetector:
+    """Test cases for OutlierDetector."""
+
+    def test_iqr_detection(self, sample_df):
+        """Test IQR outlier detection."""
+        detector = OutlierDetector(method='iqr')
+        result = detector.detect(sample_df, columns=['with_outliers'])
+
+        assert result['is_outlier'].sum() == 1
+
+    def test_zscore_detection(self, sample_df):
+        """Test Z-score outlier detection."""
+        detector = OutlierDetector(method='zscore')
+        result = detector.detect(sample_df, columns=['with_outliers'])
+
+        assert result['is_outlier'].sum() == 1
+
+    def test_remove_outliers(self, sample_df):
+        """Test outlier removal."""
+        detector = OutlierDetector(method='iqr')
+        result = detector.remove(sample_df, columns=['with_outliers'])
+
+        assert len(result) == 9
+
+    def test_cap_outliers(self, sample_df):
+        """Test outlier capping."""
+        detector = OutlierDetector(method='iqr')
+        result = detector.cap(sample_df, columns=['with_outliers'])
+
+        assert result['with_outliers'].max() < 1000
+        assert len(result) == 10
+
+=== FILE END ===
+
